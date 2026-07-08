@@ -22,7 +22,7 @@ services:
           "-c",
           "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health').read()",
         ]
-      interval: 5s
+      interval: 60s
       timeout: 3s
       retries: 6
       start_period: 5s
@@ -50,7 +50,7 @@ services:
           "-c",
           "import urllib.request; urllib.request.urlopen('http://localhost:4000/health/readiness').read()",
         ]
-      interval: 5s
+      interval: 60s
       timeout: 3s
       retries: 8
       start_period: 10s
@@ -64,7 +64,7 @@ services:
       - ollama:/root/.ollama
     healthcheck:
       test: ["CMD", "ollama", "list"]
-      interval: 5s
+      interval: 60s
       timeout: 3s
       retries: 12
       start_period: 10s
