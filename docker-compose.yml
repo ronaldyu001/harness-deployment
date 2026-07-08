@@ -1,0 +1,84 @@
+services:
+  backend:
+    build:
+      context: https://github.com/ronaldyu001/Harness.git#dev
+    image: harness-backend:dev
+    container_name: harness-backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    # Map container port to computer port.
+    ports:
+      - "8000:8000"
+    environment:
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
+      LITELLM_BASE_URL: ${LITELLM_BASE_URL}
+    depends_on:
+      litellm:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health').read()",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  litellm:
+    image: ghcr.io/berriai/litellm:v1.91.0
+    container_name: harness-litellm
+    command: ["--config", "/app/config.yaml", "--port", "4000"]
+    ports:
+      - "4000:4000"
+    environment:
+      LITELLM_OLLAMA_MODEL: ollama/${OLLAMA_MODEL}
+    # Map litellm config to the container path as read only.
+    volumes:
+      - ./LiteLLM_config.yaml:/app/config.yaml:ro
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+    # Check if endpoint is hittable instead of checking /health.
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:4000/health/readiness').read()",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  ollama:
+    image: ollama/ollama:0.31.1
+    container_name: harness-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  ollama-pull:
+    image: ollama/ollama:0.31.1
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      # Point the one-shot Ollama CLI container at the long-running Ollama service.
+      OLLAMA_HOST: ${OLLAMA_BASE_URL}
+    command: ["pull", "${OLLAMA_MODEL}"]
+    restart: "no"
+
+volumes:
+  ollama:
