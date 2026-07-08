@@ -1,7 +1,7 @@
 services:
   backend:
     build:
-      context: https://github.com/ronaldyu001/Harness.git#dev
+      context: https://github.com/ronaldyu001/harness-backend.git#dev
     image: harness-backend:dev
     container_name: harness-backend
     command: uvicorn main:app --host 0.0.0.0 --port 8000
@@ -22,10 +22,10 @@ services:
           "-c",
           "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health').read()",
         ]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 10s
+      interval: 5s
+      timeout: 3s
+      retries: 6
+      start_period: 5s
 
   litellm:
     image: ghcr.io/berriai/litellm:v1.91.0
@@ -50,9 +50,9 @@ services:
           "-c",
           "import urllib.request; urllib.request.urlopen('http://localhost:4000/health/readiness').read()",
         ]
-      interval: 10s
-      timeout: 5s
-      retries: 12
+      interval: 5s
+      timeout: 3s
+      retries: 8
       start_period: 10s
 
   ollama:
@@ -64,8 +64,8 @@ services:
       - ollama:/root/.ollama
     healthcheck:
       test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 5s
+      interval: 5s
+      timeout: 3s
       retries: 12
       start_period: 10s
 
