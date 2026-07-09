@@ -11,6 +11,7 @@ services:
     environment:
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
       LITELLM_BASE_URL: ${LITELLM_BASE_URL}
+      LITELLM_TIMEOUT: ${LITELLM_TIMEOUT}
     depends_on:
       litellm:
         condition: service_healthy
